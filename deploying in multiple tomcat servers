@@ -1,0 +1,58 @@
+pipeline{
+    agent any
+    parameters {
+        choice choices: ['Dev-Env', 'Test-Env', 'Preprod-Env', 'Prod-Env'], description: 'select the server to deploy', name: 'Server'
+    }
+    stages{
+        stage('clone'){
+            steps{
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/saikrishna7051/taxi-booking.git']])
+            }
+        }
+        stage('validate'){
+            steps{
+                sh 'mvn validate'
+            }
+        }
+        stage('compile'){
+            steps{
+                sh 'mvn compile'
+            }
+        }
+        stage('test'){
+            steps{
+                sh 'mvn test'
+            }
+        }
+        stage('package'){
+            steps{
+                sh 'mvn package'
+            }
+        }
+        stage('Deploy in Dev-Env tomcat server'){
+            steps{
+                deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://13.53.216.83:8080/manager/html')], contextPath: null, war: '**/*.war'
+            }
+        }
+        stage('input'){
+            steps{
+                input message: '', parameters: [choice(choices: ['yes', 'no'], description: 'do you want to deploy in test tomcat server', name: 'Test-Env'), choice(choices: ['yes', 'no'], description: 'do you want to deploy in preprod tomcat server', name: 'Preprod-Env'), choice(choices: ['yes', 'no'], description: 'do you want to deploy in prod tomcat server', name: 'Prod-Env')]
+            }
+        }
+        stage('Deploy in Test-env tomcat server'){
+            steps{
+                deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://13.49.65.229:8080/manager/html')], contextPath: null, war: '**/*.war'
+            }
+        }
+        stage('Deploy in Preprod-Env tomcat server'){
+            steps{
+                deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://16.16.27.102:8080/manager/html')], contextPath: null, war: '**/*.war'
+            }
+        }
+        stage('Deploy in Prod-Env tomcat server'){
+            steps{
+                deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://16.171.234.106:8080/manager/html')], contextPath: null, war: '**/*.war'
+            }
+        }
+    }
+}
