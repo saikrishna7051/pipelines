@@ -1,0 +1,77 @@
+pipeline{
+    agent any
+    parameters {
+        choice choices: ['tomcat1', 'tomcat2', 'tomcat3', 'tomcat4'], name: 'deploying servers'
+    }
+    stages{
+        stage("clone"){
+            steps{
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Venn1991/taxi-booking.git']])
+            }
+        }
+        stage("validate"){
+            steps{
+                sh "mvn validate"
+            }
+        }
+        stage("test"){
+            steps{
+                sh "mvn test"
+            }
+        }
+        stage("package"){
+            steps{
+                sh "mvn package"
+            }
+        }
+        stage("compile"){
+            steps{
+                sh "mvn compile"
+            }
+        }
+        stage("deploy to tomcat server1"){
+            when {
+                environment name: 'tomcat1', value: ''
+            }
+            input {
+                message 'deploying the tomcat server1'
+            }
+            steps{
+                deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://13.48.194.93:8080/manager/html')], contextPath: null, war: '/*.war'
+            }
+        }
+        stage("deploy to tomcat server2"){
+            when {
+                environment name: 'tomcat2', value: ''
+            }
+            input {
+                message 'deploying the tomcat server2'
+            }
+            steps{
+                deploy adapters: [tomcat9(credentialsId: 'tomcat',path: '', url: 'http://13.53.216.173:8080/manager/html')], contextPath: null, war: '/*.war'
+            }
+        }
+        stage("deploy to tomcat server3"){
+            when {
+                environment name: 'tomcat3', value: ''
+            }
+            input {
+                message 'deploying the tomcat server3'
+            }
+            steps{
+                deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://13.49.69.152:8080/manager/html')], contextPath: null, war: '/*.war'
+            }
+        }
+        stage("deploy to tomcat server4"){
+            when {
+                environment name: 'tomcat4', value: ''
+            }
+            input {
+                message 'deploying the tomcat server4'
+            }
+            steps{
+                deploy adapters: [tomcat9(credentialsId: 'tomcat', path: '', url: 'http://16.171.235.31:8080/manager/htm')], contextPath: null, war: '/*.war'
+            }
+        }
+    }
+}
